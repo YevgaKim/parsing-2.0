@@ -1,3 +1,4 @@
+from base64 import urlsafe_b64decode
 import time
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -25,7 +26,7 @@ with open("data.csv","w",newline='') as f:
         
         
     )
-
+#this function takes the link from each element of the main page
 def get_urls():
     with open("index.html","r",encoding="utf-8") as file:
         src = file.read()
@@ -43,38 +44,39 @@ def get_urls():
 
 def get_data():
     
-    # options = webdriver.ChromeOptions()
-    # options.add_argument("user-agent = Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36.useragent.override")
-    # driver = webdriver.Chrome(
-    #         executable_path=r"C:\Users\ЯкименкоЄвгенійСергі\source\repos\1000-7\chromedriver",
-    #         options=options
-    #     )
+    options = webdriver.ChromeOptions()
+    options.add_argument("user-agent = Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36.useragent.override")
+    driver = webdriver.Chrome(
+            executable_path=r"C:\Users\ЯкименкоЄвгенійСергі\source\repos\1000-7\chromedriver",
+            options=options
+        )
     
-    # try:
+    try:
         
-    #     driver.get(url="https://jut.su/anime/")
-    #     time.sleep(3)
-    #     count=0
-    #     while True:
-    #         find_more_elem = driver.find_element(by=By.CLASS_NAME,value="load_more_anime")
+        driver.get(url="https://jut.su/anime/")
+        time.sleep(3)
+        count=0
+        while True:
+            find_more_elem = driver.find_element(by=By.CLASS_NAME,value="load_more_anime")
             
-    #         if find_more_elem:
-    #             actions = ActionChains(driver)
-    #             actions.move_to_element(find_more_elem).perform()
-    #             count+=1
-    #             print(f"[INFO] {count} page complited")
-    #             time.sleep(10)
+            if find_more_elem:
+                actions = ActionChains(driver)
+                actions.move_to_element(find_more_elem).perform()
+                count+=1
+                print(f"[INFO] {count} page complited")
+                time.sleep(8)
             
-    #         if count==28:
-    #             with open("index.html","a",encoding="utf-8") as f:
-    #                 f.write(driver.page_source)
-    #             break
-    # except Exception as ex:
-    #     print(ex)
-    # finally:
-    #     driver.close()
-    #     driver.quit()
-    
+            if count==28:
+                with open("index.html","w",encoding="utf-8") as f:
+                    f.write(driver.page_source)
+                break
+    except Exception as ex:
+        print(ex)
+    finally:
+        driver.close()
+        driver.quit()
+        
+def get_info():   
     with open("index.html","r",encoding="utf-8") as file:
         src = file.read()
 
@@ -104,73 +106,74 @@ def get_data():
     count_anime=0       
     urls= get_urls()
     print("[INFO] Starting download all information")
-    for url in urls[759:]:
+    for url in urls:
         src = requests.get(url=url,headers=headers)
         count_anime+=1
         soup = BeautifulSoup(src.text,"lxml")
         try:
             info = soup.find("div",class_="under_video_additional the_hildi").text.strip()
-        except:
-            info = soup.find("div",class_="under_video_additional the_hildi uv_rounded_bottom_imp").text.strip()
-        info = re.sub("Аниме","",info)
-        info = re.sub(r"(\s(и)\s)",",",info)
-        info=re.split("[:|.|,]",info)
+            info = re.sub("Аниме","",info)
+            info = re.sub(r"(\s(и)\s)",",",info)
+            info=re.split("[:|.|,]",info)
 
-        genre=[]
-        topics=[]
-        years=[]
-        old=re.search(r"\d\d\+","".join(info))
-        try:
-            old=old.group(0)
-        except:
-            old=""
-        for i in info:
-            if i =='Жанры' or i =='Жанр':
-                j=1
-                while info[j]!='Тема' and info[j]!='Темы' and info[j]!='Годы выпуска' and info[j]!='Год выпуска':
-                    genre.append(info[j].strip())
-                    j+=1
-            
+            genre=[]
+            topics=[]
+            years=[]
+            old=re.search(r"\d\d\+","".join(info))
+            try:
+                old=old.group(0)
+            except:
+                old=""
+            for i in info:
+                if i =='Жанры' or i =='Жанр':
+                    j=1
+                    while info[j]!='Тема' and info[j]!='Темы' and info[j]!='Годы выпуска' and info[j]!='Год выпуска':
+                        genre.append(info[j].strip())
+                        j+=1
                 
-            if i =='Темы' or i =='Тема':
-                k=j+1
-                while info[k]!='Годы выпуска' and info[k]!='Год выпуска':
-                    topics.append(info[k].strip())
-                    k+=1
+                    
+                if i =='Темы' or i =='Тема':
+                    k=j+1
+                    while info[k]!='Годы выпуска' and info[k]!='Год выпуска':
+                        topics.append(info[k].strip())
+                        k+=1
+                
+                
+                if i =='Годы выпуска' or i =='Год выпуска':
+                    try:
+                        l=k+1
+                    except:
+                        l=j+1
+                    try:
+                        while info[l]!='Оригинальное название':
+                            years.append(info[l].strip())
+                            l+=1
+                        break 
+                    except:
+                        break
+            del j
+            try:
+                del k
+            except:
+                pass
+            del l
             
-            
-            if i =='Годы выпуска' or i =='Год выпуска':
-                try:
-                    l=k+1
-                except:
-                    l=j+1
-                try:
-                    while info[l]!='Оригинальное название':
-                        years.append(info[l].strip())
-                        l+=1
-                    break 
-                except:
-                    break
-        del j
-        try:
-            del k
+            with open("data.csv","a",newline='') as f:
+                writer= csv.writer(f)
+                writer.writerow(
+                    (
+                        all_anime_name[count_anime-1],
+                        all_count_series[count_anime-1],
+                        ",".join(genre),
+                        ",".join(topics if topics!=[] else "-"),
+                        ",".join(years),
+                        old
+                        )
+                )
+            print(f"[INFO] Anime number {count_anime} complited")
         except:
-            pass
-        del l
+            print(f"[ERROR] Anime number {count_anime}, name {all_anime_name[count_anime-1]}")
         
-        with open("data.csv","a",newline='') as f:
-            writer= csv.writer(f)
-            writer.writerow(
-                (
-                    all_anime_name[count_anime-1],
-                    all_count_series[count_anime-1],
-                    ",".join(genre),
-                    ",".join(topics if topics!=[] else "-"),
-                    ",".join(years),
-                    old
-                    )
-            )
-        print(f"[INFO] Anime number {count_anime} complited")
 
         
 
@@ -178,6 +181,7 @@ def get_data():
 
 def main():
     get_data()
+    get_info()
 if __name__=="__main__":
     main()
 
