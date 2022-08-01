@@ -1,4 +1,3 @@
-from base64 import urlsafe_b64decode
 import time
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -41,16 +40,13 @@ def get_urls():
         urls.append(f"https://jut.su/{url}")
 
     return urls
-
+#this function takes the main page with all anime
 def get_data():
-    
-    options = webdriver.ChromeOptions()
-    options.add_argument("user-agent = Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36.useragent.override")
+    print("Wait for the program to take the site code itself (do not touch or click anything)")
+    time.sleep(3)
     driver = webdriver.Chrome(
-            executable_path=r"C:\Users\ЯкименкоЄвгенійСергі\source\repos\1000-7\chromedriver",
-            options=options
+            executable_path=r"C:\Users\ЯкименкоЄвгенійСергі\source\repos\1000-7\chromedriver"   
         )
-    
     try:
         
         driver.get(url="https://jut.su/anime/")
@@ -64,7 +60,7 @@ def get_data():
                 actions.move_to_element(find_more_elem).perform()
                 count+=1
                 print(f"[INFO] {count} page complited")
-                time.sleep(8)
+                time.sleep(10)
             
             if count==28:
                 with open("index.html","w",encoding="utf-8") as f:
@@ -75,7 +71,7 @@ def get_data():
     finally:
         driver.close()
         driver.quit()
-        
+#this function takes all the information from each anime by clicking on the link
 def get_info():   
     with open("index.html","r",encoding="utf-8") as file:
         src = file.read()
@@ -84,8 +80,8 @@ def get_info():
     all_anime=soup.find_all("div",class_="all_anime")
     all_anime_name=[]
     all_count_series=[]
+    #take name and count of series
     for anime in all_anime:
-        
         anime_name=anime.find(class_="aaname").text
         all_anime_name.append(anime_name)
         anime_series= anime.find(class_="aailines").text.strip()
@@ -106,6 +102,7 @@ def get_info():
     count_anime=0       
     urls= get_urls()
     print("[INFO] Starting download all information")
+    #take genre, topics, years and age limit
     for url in urls:
         src = requests.get(url=url,headers=headers)
         count_anime+=1
@@ -170,9 +167,9 @@ def get_info():
                         old
                         )
                 )
-            print(f"[INFO] Anime number {count_anime} complited")
+            print(f"[INFO] Anime number {count_anime}/{len(all_anime_name)} complited")
         except:
-            print(f"[ERROR] Anime number {count_anime}, name {all_anime_name[count_anime-1]}")
+            print(f"[ERROR] Anime number {count_anime}/{len(all_anime_name)}, name {all_anime_name[count_anime-1]}")
         
 
         
