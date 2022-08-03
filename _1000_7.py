@@ -6,25 +6,43 @@ from selenium.webdriver.common.by import By
 import re
 import requests
 import csv
+import sqlalchemy
 
 headers={
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
 }
 
-with open("data.csv","w",newline='') as f:
-    writer= csv.writer(f)
-    writer.writerow(
-        (
-            "Name_anime", 
-            "Count_of_series",
-            "Genre",
-            "Topics",
-            "Years",
-            "Age_limit"
-        )
-        
-        
-    )
+engine = sqlalchemy.create_engine("postgresql+psycopg2://postgres:rootroot@localhost:5432/anime")
+connection = engine.connect()
+
+with connection.begin() as trans:
+    connection.execute("DROP TABLE IF EXISTS anime")
+
+with connection.begin() as trans:
+    connection.execute("""CREATE TABLE IF NOT EXISTS anime(
+                        anime_id serial PRIMARY KEY,
+                        anime_name text,
+                        count_of_series int,
+                        genre text,
+                        topics text,
+                        years text,
+                        age_limit text
+
+    )""")
+
+# with open("data.csv","w",newline='') as f:
+#     writer= csv.writer(f)
+#     writer.writerow(
+#         (
+#             "Name_anime", 
+#             "Count_of_series",
+#             "Genre",
+#             "Topics",
+#             "Years",
+#             "Age_limit"
+#         )   
+#     )
+
 #this function takes the link from each element of the main page
 def get_urls():
     with open("index.html","r",encoding="utf-8") as file:
@@ -43,34 +61,34 @@ def get_urls():
 #this function takes the main page with all anime
 def get_data():
     print("Wait for the program to take the site code itself (do not touch or click anything)")
-    time.sleep(3)
-    driver = webdriver.Chrome(
-            executable_path=r"C:\Users\ЯкименкоЄвгенійСергі\source\repos\1000-7\chromedriver"   
-        )
-    try:
+    # time.sleep(3)
+    # driver = webdriver.Chrome(
+    #         executable_path=r"C:\Users\ЯкименкоЄвгенійСергі\source\repos\1000-7\chromedriver"   
+    #     )
+    # try:
         
-        driver.get(url="https://jut.su/anime/")
-        time.sleep(3)
-        count=0
-        while True:
-            find_more_elem = driver.find_element(by=By.CLASS_NAME,value="load_more_anime")
+    #     driver.get(url="https://jut.su/anime/")
+    #     time.sleep(3)
+    #     count=0
+    #     while True:
+    #         find_more_elem = driver.find_element(by=By.CLASS_NAME,value="load_more_anime")
             
-            if find_more_elem:
-                actions = ActionChains(driver)
-                actions.move_to_element(find_more_elem).perform()
-                count+=1
-                print(f"[INFO] {count} page complited")
-                time.sleep(10)
+    #         if find_more_elem:
+    #             actions = ActionChains(driver)
+    #             actions.move_to_element(find_more_elem).perform()
+    #             count+=1
+    #             print(f"[INFO] {count} page complited")
+    #             time.sleep(10)
             
-            if count==28:
-                with open("index.html","w",encoding="utf-8") as f:
-                    f.write(driver.page_source)
-                break
-    except Exception as ex:
-        print(ex)
-    finally:
-        driver.close()
-        driver.quit()
+    #         if count==28:
+    #             with open("index.html","w",encoding="utf-8") as f:
+    #                 f.write(driver.page_source)
+    #             break
+    # except Exception as ex:
+    #     print(ex)
+    # finally:
+    #     driver.close()
+    #     driver.quit()
 #this function takes all the information from each anime by clicking on the link
 def get_info():   
     with open("index.html","r",encoding="utf-8") as file:
@@ -155,18 +173,30 @@ def get_info():
                 pass
             del l
             
-            with open("data.csv","a",newline='') as f:
-                writer= csv.writer(f)
-                writer.writerow(
-                    (
-                        all_anime_name[count_anime-1],
-                        all_count_series[count_anime-1],
-                        ",".join(genre),
-                        ",".join(topics if topics!=[] else "-"),
-                        ",".join(years),
-                        old
-                        )
-                )
+            # with open("data.csv","a",newline='') as f:
+            #     writer= csv.writer(f)
+            #     writer.writerow(
+            #         (
+            #             all_anime_name[count_anime-1],
+            #             all_count_series[count_anime-1],
+            #             ",".join(genre),
+            #             ",".join(topics if topics!=[] else "-"),
+            #             ",".join(years),
+            #             old
+            #             )
+            #     )
+
+            
+            with connection.begin() as trans:
+                connection.execute("""INSERT INTO anime(anime_name,count_of_series,genre,topics,years,age_limit)
+                                    VALUES(%s,%s,%s,%s,%s,%s)
+                """,(all_anime_name[count_anime-1],
+                    all_count_series[count_anime-1],
+                    ",".join(genre),
+                    ",".join(topics if topics!=[] else "-"),
+                    ",".join(years),
+                    old))
+
             print(f"[INFO] Anime number {count_anime}/{len(all_anime_name)} complited")
         except:
             print(f"[ERROR] Anime number {count_anime}/{len(all_anime_name)}, name {all_anime_name[count_anime-1]}")
