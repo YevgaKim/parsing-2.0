@@ -76,7 +76,6 @@ def get_name_count_series():
 async def get_info(session,url,count_anime, all_anime_name, all_count_series): 
     async with session.get(url=url, headers=headers) as response:
         response_text = await response.text()
-        print(response)
         soup = BeautifulSoup(response_text, "html.parser")
         try:
             info = soup.find("div",class_="under_video_additional the_hildi").text.strip()
@@ -147,7 +146,7 @@ async def gather_data():
         all_anime_name, all_count_series= get_name_count_series()
         tasks = []
         #take genre, topics, years and age limit
-        for url in get_urls()[:1]:
+        for url in get_urls():
             task = asyncio.create_task( get_info(session,url,count_anime, all_anime_name, all_count_series))
             tasks.append(task)
             count_anime+=1
