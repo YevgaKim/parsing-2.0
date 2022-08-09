@@ -124,7 +124,7 @@ def get_info():
     for url in urls:
         src = requests.get(url=url,headers=headers)
         count_anime+=1
-        soup = BeautifulSoup(src.text,"lxml")
+        soup = BeautifulSoup(src.text,"html.parser")
         try:
             info = soup.find("div",class_="under_video_additional the_hildi").text.strip()
             info = re.sub("Аниме","",info)
