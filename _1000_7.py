@@ -8,6 +8,8 @@ import requests
 import csv
 import sqlalchemy
 
+start_time=time.time()
+
 headers={
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
 }
@@ -211,6 +213,8 @@ def main():
     get_info()
 if __name__=="__main__":
     main()
+    finish_time=time.time()-start_time
+    print(f"Script running time - {finish_time}")
 
 
     
